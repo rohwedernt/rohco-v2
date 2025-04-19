@@ -49,6 +49,14 @@
 			</div>
 		{/each}
 	</div>
+	
+	<!-- Preload all hover variants offscreen -->
+<div class="hidden">
+	<Icon icon="logos:youtube-icon" />
+	<Icon icon="logos:spotify-icon" />
+	<Icon icon="skill-icons:instagram" />
+	<Icon icon="logos:tiktok-icon" />
+</div>
 	<slot />
 </main>
 
