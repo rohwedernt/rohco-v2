@@ -49,6 +49,7 @@
 			</div>
 		{/each}
 	</div>
+	<slot />
 </main>
 
 <style>
