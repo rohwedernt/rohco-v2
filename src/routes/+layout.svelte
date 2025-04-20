@@ -1,6 +1,5 @@
 <script lang="ts">
 	import '../app.css';
-	import { onMount, onDestroy } from 'svelte';
 	import Icon from '@iconify/svelte';
 
 	const icons = [
@@ -12,38 +11,11 @@
 
 	let hoveredIndex: number | null = null;
 	let bgVideo: HTMLVideoElement;
-	let isMobile: boolean;
-
-	function updateViewport() {
-		const nowMobile = window.matchMedia('(max-width: 799px)').matches;
-		if (nowMobile !== isMobile) {
-			isMobile = nowMobile;
-			if (bgVideo) {
-				bgVideo.load();
-				bgVideo.play();
-			}
-		}
-	}
-
-	onMount(() => {
-	requestAnimationFrame(() => {
-		isMobile = window.matchMedia('(max-width: 799px)').matches;
-		if (bgVideo) {
-			bgVideo.play();
-		}
-		window.addEventListener('resize', updateViewport);
-	});
-});
-
-	onDestroy(() => {
-		if (typeof window !== 'undefined') {
-			window.removeEventListener('resize', updateViewport);
-		}
-	});
 </script>
 
 <video bind:this={bgVideo} autoplay muted playsinline class="background-video">
-	<source src={isMobile ? '/rohco-sm.mp4' : '/rohco.mp4'} type="video/mp4" />
+	<source src="/rohco-sm.mp4" type="video/mp4" media="(max-width: 799px)" />
+	<source src="/rohco.mp4" type="video/mp4" media="(min-width: 800px)" />
 	Your browser does not support the video tag.
 </video>
 
