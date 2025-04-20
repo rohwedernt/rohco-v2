@@ -26,14 +26,14 @@
 	}
 
 	onMount(() => {
+	requestAnimationFrame(() => {
 		isMobile = window.matchMedia('(max-width: 799px)').matches;
-
 		if (bgVideo) {
 			bgVideo.play();
 		}
-
 		window.addEventListener('resize', updateViewport);
 	});
+});
 
 	onDestroy(() => {
 		if (typeof window !== 'undefined') {
