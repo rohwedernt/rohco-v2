@@ -20,13 +20,16 @@
 </video>
 
 <main>
+	<div class="flex items-center justify-center h-screen w-screen">
+		<h1 class="coming-soon mt-50 text-white font-stretch-ultra-expanded tracking-widest">— coming soon —</h1>
+	</div>
 	<div class="content-wrapper flex flex-col gap-12">
 		{#each icons as icon, i}
 			<div
 				role="img"
 				on:mouseenter={() => (hoveredIndex = i)}
 				on:mouseleave={() => (hoveredIndex = null)}
-				class="icon-wrapper cursor-pointer transition-all duration-200"
+				class=" hidden icon-wrapper cursor-pointer transition-all duration-200"
 			>
 				<Icon
 					icon={hoveredIndex === i ? icon.hover : icon.default}
@@ -94,6 +97,26 @@
 		.icon-wrapper {
 			width: 60px;
 			height: 60px;
+		}
+	}
+
+	.coming-soon {
+		opacity: 0;
+		animation: fadeIn 1s ease-in forwards;
+		animation-delay: 2s;
+		font-size: 2rem;
+
+		@media (max-width: 800px) {
+			font-size: 1.5rem;
+		}
+	}
+
+	@keyframes fadeIn {
+		from {
+			opacity: 0;
+		}
+		to {
+			opacity: 1;
 		}
 	}
 </style>
