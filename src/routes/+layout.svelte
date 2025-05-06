@@ -21,7 +21,7 @@
 
 <main>
 	<div class="flex items-center justify-center h-screen w-screen">
-		<h1 class="coming-soon mt-50 text-white font-stretch-ultra-expanded tracking-widest">— coming soon —</h1>
+		<h1 class="coming-soon mt-48 text-white font-stretch-ultra-expanded tracking-widest">— coming soon —</h1>
 	</div>
 	<div class="content-wrapper flex flex-col gap-12">
 		{#each icons as icon, i}
