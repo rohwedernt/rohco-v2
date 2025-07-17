@@ -27,6 +27,13 @@
 		{#each icons as icon, i}
 			<div
 				role="img"
+				aria-label={
+					i === 0 ? 'YouTube icon' :
+					i === 1 ? 'Spotify icon' :
+					i === 2 ? 'Instagram icon' :
+					i === 3 ? 'TikTok icon' :
+					''
+				}
 				on:mouseenter={() => (hoveredIndex = i)}
 				on:mouseleave={() => (hoveredIndex = null)}
 				class=" hidden icon-wrapper cursor-pointer transition-all duration-200"
