@@ -13,6 +13,10 @@
 	let bgVideo: HTMLVideoElement;
 </script>
 
+<svelte:head>
+	<title>Rohco</title>
+</svelte:head>
+
 <video bind:this={bgVideo} autoplay muted playsinline class="background-video">
 	<source src="/rohco-sm.mp4" type="video/mp4" media="(max-width: 799px)" />
 	<source src="/rohco.mp4" type="video/mp4" media="(min-width: 800px)" />
