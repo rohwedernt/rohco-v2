@@ -24,23 +24,27 @@
 </video>
 
 <main>
-	<div class="flex items-center justify-center h-screen w-screen">
-		<h1 class="coming-soon mt-48 text-white font-stretch-ultra-expanded tracking-widest">— coming soon —</h1>
+	<div class="flex h-screen w-screen items-center justify-center">
+		<h1 class="coming-soon mt-48 tracking-widest text-white font-stretch-ultra-expanded">
+			— coming soon —
+		</h1>
 	</div>
 	<div class="content-wrapper flex flex-col gap-12">
 		{#each icons as icon, i}
 			<div
 				role="img"
-				aria-label={
-					i === 0 ? 'YouTube icon' :
-					i === 1 ? 'Spotify icon' :
-					i === 2 ? 'Instagram icon' :
-					i === 3 ? 'TikTok icon' :
-					''
-				}
+				aria-label={i === 0
+					? 'YouTube icon'
+					: i === 1
+						? 'Spotify icon'
+						: i === 2
+							? 'Instagram icon'
+							: i === 3
+								? 'TikTok icon'
+								: ''}
 				on:mouseenter={() => (hoveredIndex = i)}
 				on:mouseleave={() => (hoveredIndex = null)}
-				class=" hidden icon-wrapper cursor-pointer transition-all duration-200"
+				class=" icon-wrapper hidden cursor-pointer transition-all duration-200"
 			>
 				<Icon
 					icon={hoveredIndex === i ? icon.hover : icon.default}
