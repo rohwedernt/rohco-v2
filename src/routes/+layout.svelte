@@ -90,7 +90,7 @@
 	:global(#app),
 	:global(body) {
 		height: 100%;
-		background: #0a0a0a;
+		background: #ffffff;
 	}
 
 	.content-wrapper {
@@ -135,7 +135,7 @@
 		position: fixed;
 		inset: 0;
 		z-index: 100;
-		background: #0a0a0a;
+		background: linear-gradient(150deg, #f0f4ff 0%, #ffffff 50%, #f5f0ff 100%);
 		display: flex;
 		flex-direction: column;
 		align-items: center;
@@ -159,11 +159,11 @@
 	@keyframes pulse-horns {
 		0%, 100% {
 			transform: scale(1);
-			filter: drop-shadow(0 0 16px rgba(220, 38, 38, 0.5));
+			filter: drop-shadow(0 0 16px rgba(99, 102, 241, 0.4));
 		}
 		50% {
 			transform: scale(1.18);
-			filter: drop-shadow(0 0 36px rgba(220, 38, 38, 1));
+			filter: drop-shadow(0 0 32px rgba(99, 102, 241, 0.8));
 		}
 	}
 
@@ -176,7 +176,7 @@
 
 	.bar {
 		width: 7px;
-		background: #dc2626;
+		background: #6366f1;
 		border-radius: 3px 3px 0 0;
 		animation: equalize 0.7s ease-in-out infinite alternate;
 	}
