@@ -45,11 +45,6 @@
 </video>
 
 <main>
-	<div class="flex h-screen w-screen items-center justify-center">
-		<h1 class="coming-soon mt-48 tracking-widest text-white font-stretch-ultra-expanded">
-			— coming soon —
-		</h1>
-	</div>
 	<div class="content-wrapper flex flex-col gap-12">
 		{#each icons as icon, i}
 			<div
