@@ -27,6 +27,17 @@
 	<title>Rohco</title>
 </svelte:head>
 
+<div class="loader" class:hidden={videoReady}>
+	<div class="horns">🤘</div>
+	<div class="equalizer">
+		<span class="bar"></span>
+		<span class="bar"></span>
+		<span class="bar"></span>
+		<span class="bar"></span>
+		<span class="bar"></span>
+	</div>
+</div>
+
 <video bind:this={bgVideo} autoplay muted playsinline preload="auto" class="background-video" class:video-ready={videoReady}>
 	<source src="/rohco-sm.mp4" type="video/mp4" media="(max-width: 799px)" />
 	<source src="/rohco.mp4" type="video/mp4" media="(min-width: 800px)" />
@@ -79,6 +90,7 @@
 	:global(#app),
 	:global(body) {
 		height: 100%;
+		background: #0a0a0a;
 	}
 
 	.content-wrapper {
@@ -117,6 +129,67 @@
 
 	.background-video.video-ready {
 		opacity: 1;
+	}
+
+	.loader {
+		position: fixed;
+		inset: 0;
+		z-index: 100;
+		background: #0a0a0a;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 2rem;
+		opacity: 1;
+		transition: opacity 0.8s ease-out;
+		pointer-events: none;
+	}
+
+	.loader.hidden {
+		opacity: 0;
+	}
+
+	.horns {
+		font-size: 5rem;
+		animation: pulse-horns 1.4s ease-in-out infinite;
+		user-select: none;
+	}
+
+	@keyframes pulse-horns {
+		0%, 100% {
+			transform: scale(1);
+			filter: drop-shadow(0 0 16px rgba(220, 38, 38, 0.5));
+		}
+		50% {
+			transform: scale(1.18);
+			filter: drop-shadow(0 0 36px rgba(220, 38, 38, 1));
+		}
+	}
+
+	.equalizer {
+		display: flex;
+		align-items: flex-end;
+		gap: 5px;
+		height: 36px;
+	}
+
+	.bar {
+		width: 7px;
+		background: #dc2626;
+		border-radius: 3px 3px 0 0;
+		animation: equalize 0.7s ease-in-out infinite alternate;
+	}
+
+	.bar:nth-child(1) { animation-duration: 0.55s; }
+	.bar:nth-child(2) { animation-duration: 0.85s; animation-delay: 0.1s; }
+	.bar:nth-child(3) { animation-duration: 0.5s;  animation-delay: 0.2s; }
+	.bar:nth-child(4) { animation-duration: 0.75s; animation-delay: 0.12s; }
+	.bar:nth-child(5) { animation-duration: 0.65s; animation-delay: 0.05s; }
+
+	@keyframes equalize {
+		from { height: 6px; }
+		to   { height: 36px; }
 	}
 
 	.icon-wrapper {
