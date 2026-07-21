@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import '../app.css';
 	import Icon from '@iconify/svelte';
 
@@ -11,13 +12,22 @@
 
 	let hoveredIndex: number | null = null;
 	let bgVideo: HTMLVideoElement;
+	let videoReady = false;
+
+	onMount(() => {
+		if (bgVideo.readyState >= 4) {
+			videoReady = true;
+		} else {
+			bgVideo.addEventListener('canplaythrough', () => (videoReady = true), { once: true });
+		}
+	});
 </script>
 
 <svelte:head>
 	<title>Rohco</title>
 </svelte:head>
 
-<video bind:this={bgVideo} autoplay muted playsinline class="background-video">
+<video bind:this={bgVideo} autoplay muted playsinline preload="auto" class="background-video" class:video-ready={videoReady}>
 	<source src="/rohco-sm.mp4" type="video/mp4" media="(max-width: 799px)" />
 	<source src="/rohco.mp4" type="video/mp4" media="(min-width: 800px)" />
 	Your browser does not support the video tag.
@@ -93,6 +103,8 @@
 		object-position: center top;
 		z-index: -1;
 		pointer-events: none;
+		opacity: 0;
+		transition: opacity 0.8s ease-in;
 
 		@media (min-width: 940px) {
 			object-position: right top;
@@ -101,6 +113,10 @@
 		@media (max-width: 800px) {
 			object-position: center center;
 		}
+	}
+
+	.background-video.video-ready {
+		opacity: 1;
 	}
 
 	.icon-wrapper {
