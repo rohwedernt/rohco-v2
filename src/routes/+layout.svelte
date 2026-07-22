@@ -39,7 +39,7 @@
 </div>
 
 <video bind:this={bgVideo} autoplay muted playsinline preload="auto" class="background-video" class:video-ready={videoReady}>
-	<source src="/rohco-sm-3.mp4" type="video/mp4" media="(max-width: 799px)" />
+	<source src="/rohco-sm-4.mp4" type="video/mp4" media="(max-width: 799px)" />
 	<source src="/rohco-4.mp4" type="video/mp4" media="(min-width: 800px)" />
 	Your browser does not support the video tag.
 </video>
