@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, onDestroy } from 'svelte';
 	import '../app.css';
 	import Icon from '@iconify/svelte';
 
@@ -13,12 +13,59 @@
 	let hoveredIndex: number | null = null;
 	let bgVideo: HTMLVideoElement;
 	let videoReady = false;
+	let hasPlayedThrough = false;
+
+	function handleVideoEnded() {
+		hasPlayedThrough = true;
+	}
+
+	// Backgrounded mobile tabs can get their decoded video buffer evicted to
+	// save memory; on return the element is reset to frame 0 and autoplay
+	// doesn't retrigger. Once the intro has played through, snap it back to
+	// the final frame instead of replaying the whole animation.
+	function restoreFinalFrame() {
+		if (!bgVideo || !hasPlayedThrough) return;
+
+		const seekToEnd = () => {
+			if (bgVideo.duration && bgVideo.currentTime < bgVideo.duration - 0.1) {
+				bgVideo.currentTime = bgVideo.duration;
+			}
+		};
+
+		if (bgVideo.readyState >= 1) {
+			seekToEnd();
+		} else {
+			bgVideo.addEventListener('loadedmetadata', seekToEnd, { once: true });
+			bgVideo.load();
+		}
+	}
+
+	function handleVisibilityChange() {
+		if (document.visibilityState === 'visible') restoreFinalFrame();
+	}
+
+	function handlePageShow(event: PageTransitionEvent) {
+		if (event.persisted) restoreFinalFrame();
+	}
 
 	onMount(() => {
 		if (bgVideo.readyState >= 4) {
 			videoReady = true;
 		} else {
 			bgVideo.addEventListener('canplaythrough', () => (videoReady = true), { once: true });
+		}
+
+		bgVideo.addEventListener('ended', handleVideoEnded);
+		document.addEventListener('visibilitychange', handleVisibilityChange);
+		window.addEventListener('pageshow', handlePageShow);
+	});
+
+	onDestroy(() => {
+		if (typeof document !== 'undefined') {
+			document.removeEventListener('visibilitychange', handleVisibilityChange);
+		}
+		if (typeof window !== 'undefined') {
+			window.removeEventListener('pageshow', handlePageShow);
 		}
 	});
 </script>
