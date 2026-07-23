@@ -316,7 +316,7 @@
 			drop-shadow(0 6px 14px rgba(0, 0, 0, 0.25));
 		transition: transform 0.25s ease, filter 0.25s ease;
 		opacity: 0;
-		animation: desktopIconFadeIn 4s ease forwards;
+		animation: desktopIconFadeIn 8s ease forwards;
 	}
 
 	@keyframes desktopIconFadeIn {
