@@ -315,6 +315,13 @@
 			drop-shadow(0 0 1.5px #fff)
 			drop-shadow(0 6px 14px rgba(0, 0, 0, 0.25));
 		transition: transform 0.25s ease, filter 0.25s ease;
+		opacity: 0;
+		animation: desktopIconFadeIn 4s ease forwards;
+	}
+
+	@keyframes desktopIconFadeIn {
+		from { opacity: 0; }
+		to   { opacity: 1; }
 	}
 
 	.desktop-social-icon:hover {
@@ -336,7 +343,7 @@
 	}
 
 	.menu-bar {
-		--menu-bar-top: 58vh;
+		--menu-bar-top: 57vh;
 		--menu-bar-height: 42px;
 
 		display: none;
@@ -416,7 +423,7 @@
 	}
 
 	.menu-panel {
-		--menu-bar-top: 58vh;
+		--menu-bar-top: 57vh;
 		--menu-bar-height: 42px;
 
 		display: none;
