@@ -1,22 +1,67 @@
 <script lang="ts">
-	import { onMount, onDestroy } from 'svelte';
+	import { onMount, onDestroy, tick } from 'svelte';
+	import { scale } from 'svelte/transition';
+	import { quintOut } from 'svelte/easing';
 	import '../app.css';
 	import Icon from '@iconify/svelte';
 
-	const icons = [
-		{ default: 'grommet-icons:youtube', hover: 'logos:youtube-icon' },
-		{ default: 'grommet-icons:spotify', hover: 'logos:spotify-icon' },
-		{ default: 'simple-icons:instagram', hover: 'skill-icons:instagram' },
-		{ default: 'simple-icons:tiktok', hover: 'logos:tiktok-icon' }
+	// Shared social link data. `icon` is the flat, single-color simple-icons
+	// mark for each brand: used tinted-white-on-brand-color for the mobile
+	// menu tiles, and reused as-is tinted black for the desktop row (a busy,
+	// colorful video background made the full-color brand marks hard to read).
+	const socialLinks = [
+		{
+			label: 'Instagram',
+			icon: 'simple-icons:instagram',
+			background: 'linear-gradient(135deg, #FEDA75 0%, #FA7E1E 30%, #D62976 60%, #962FBF 85%, #4F5BD5 100%)'
+		},
+		{ label: 'YouTube', icon: 'simple-icons:youtube', background: '#FF0000' },
+		{ label: 'Spotify', icon: 'simple-icons:spotify', background: '#1DB954' },
+		{ label: 'Apple Music', icon: 'simple-icons:applemusic', background: '#FA243C' },
+		{ label: 'SoundCloud', icon: 'simple-icons:soundcloud', background: '#FF5500' },
+		{ label: 'TikTok', icon: 'simple-icons:tiktok', background: '#000000' }
 	];
 
-	let hoveredIndex: number | null = null;
+	// <source media="..."> inside <video> is only evaluated once, during the
+	// browser's initial resource-selection pass — unlike <picture><source>,
+	// it never re-checks on resize. So the src is driven from JS via
+	// matchMedia instead, kept in sync with the same 874px breakpoint the
+	// CSS media queries below use.
+	const DESKTOP_BREAKPOINT = '(min-width: 874px)';
+	const MOBILE_VIDEO_SRC = '/rohco-sm-9.mp4';
+	const DESKTOP_VIDEO_SRC = '/rohco-8.mp4';
+
+	let videoSrc =
+		typeof window !== 'undefined' && window.matchMedia(DESKTOP_BREAKPOINT).matches
+			? DESKTOP_VIDEO_SRC
+			: MOBILE_VIDEO_SRC;
+
 	let bgVideo: HTMLVideoElement;
 	let videoReady = false;
 	let hasPlayedThrough = false;
+	let menuOpen = false;
+	let breakpointMql: MediaQueryList;
+
+	function toggleMenu() {
+		menuOpen = !menuOpen;
+	}
 
 	function handleVideoEnded() {
 		hasPlayedThrough = true;
+	}
+
+	async function handleBreakpointChange(event: MediaQueryListEvent) {
+		const nextSrc = event.matches ? DESKTOP_VIDEO_SRC : MOBILE_VIDEO_SRC;
+		if (nextSrc === videoSrc) return;
+
+		videoSrc = nextSrc;
+		videoReady = false;
+		hasPlayedThrough = false;
+
+		// Wait for Svelte to flush the new src to the DOM before calling
+		// play(), so we don't race and (re)play the outgoing resource.
+		await tick();
+		bgVideo?.play().catch(() => {});
 	}
 
 	// Backgrounded mobile tabs can get their decoded video buffer evicted to
@@ -48,16 +93,24 @@
 		if (event.persisted) restoreFinalFrame();
 	}
 
+	function handleCanPlayThrough() {
+		videoReady = true;
+	}
+
 	onMount(() => {
 		if (bgVideo.readyState >= 4) {
 			videoReady = true;
-		} else {
-			bgVideo.addEventListener('canplaythrough', () => (videoReady = true), { once: true });
 		}
 
+		// Not { once: true } — this needs to keep firing so the video fades
+		// back in each time handleBreakpointChange swaps the src.
+		bgVideo.addEventListener('canplaythrough', handleCanPlayThrough);
 		bgVideo.addEventListener('ended', handleVideoEnded);
 		document.addEventListener('visibilitychange', handleVisibilityChange);
 		window.addEventListener('pageshow', handlePageShow);
+
+		breakpointMql = window.matchMedia(DESKTOP_BREAKPOINT);
+		breakpointMql.addEventListener('change', handleBreakpointChange);
 	});
 
 	onDestroy(() => {
@@ -67,6 +120,7 @@
 		if (typeof window !== 'undefined') {
 			window.removeEventListener('pageshow', handlePageShow);
 		}
+		breakpointMql?.removeEventListener('change', handleBreakpointChange);
 	});
 </script>
 
@@ -85,45 +139,64 @@
 	</div>
 </div>
 
-<video bind:this={bgVideo} autoplay muted playsinline preload="auto" class="background-video" class:video-ready={videoReady}>
-	<source src="/rohco-sm-7.mp4" type="video/mp4" media="(max-width: 799px)" />
-	<source src="/rohco-4.mp4" type="video/mp4" media="(min-width: 800px)" />
+<video
+	bind:this={bgVideo}
+	src={videoSrc}
+	autoplay
+	muted
+	playsinline
+	preload="auto"
+	class="background-video"
+	class:video-ready={videoReady}
+>
 	Your browser does not support the video tag.
 </video>
 
-<main>
-	<div class="content-wrapper flex flex-col gap-12">
-		{#each icons as icon, i}
-			<div
-				role="img"
-				aria-label={i === 0
-					? 'YouTube icon'
-					: i === 1
-						? 'Spotify icon'
-						: i === 2
-							? 'Instagram icon'
-							: i === 3
-								? 'TikTok icon'
-								: ''}
-				on:mouseenter={() => (hoveredIndex = i)}
-				on:mouseleave={() => (hoveredIndex = null)}
-				class=" icon-wrapper hidden cursor-pointer transition-all duration-200"
-			>
-				<Icon
-					icon={hoveredIndex === i ? icon.hover : icon.default}
-					class="h-full w-full text-gray-800"
-				/>
-			</div>
-		{/each}
-	</div>
+<button
+	type="button"
+	class="menu-bar"
+	class:open={menuOpen}
+	class:visible={videoReady}
+	aria-expanded={menuOpen}
+	aria-controls="mobile-menu-panel"
+	on:click={toggleMenu}
+>
+	<span class="menu-bar-glyph" aria-hidden="true">
+		<span class="menu-bar-glyph-line"></span>
+		<span class="menu-bar-glyph-line"></span>
+	</span>
+	<span class="menu-bar-label">{menuOpen ? 'CLOSE' : 'MENU'}</span>
+</button>
 
-	<!-- Preload all hover variants offscreen -->
-	<div class="hidden">
-		<Icon icon="logos:youtube-icon" />
-		<Icon icon="logos:spotify-icon" />
-		<Icon icon="skill-icons:instagram" />
-		<Icon icon="logos:tiktok-icon" />
-	</div>
+<div id="mobile-menu-panel" class="menu-panel" class:open={menuOpen} aria-hidden={!menuOpen}>
+	<div class="menu-panel-handle" aria-hidden="true"></div>
+	<nav class="menu-items">
+		{#if menuOpen}
+			{#each socialLinks as item, i (item.icon)}
+				<a
+					href="#"
+					class="menu-item"
+					aria-label={item.label}
+					style="--card-bg: {item.background}"
+					in:scale={{ duration: 340, delay: i * 45, start: 0.55, easing: quintOut }}
+				>
+					<Icon icon={item.icon} class="menu-item-icon" />
+				</a>
+			{/each}
+		{/if}
+	</nav>
+</div>
+
+<div class="desktop-social-row">
+	{#each socialLinks as item (item.icon)}
+		<a href="#" class="desktop-social-icon" aria-label={item.label}>
+			<Icon icon={item.icon} class="desktop-social-icon-glyph" />
+		</a>
+	{/each}
+</div>
+
+<main>
+
 
 	<slot />
 </main>
@@ -135,18 +208,6 @@
 		background: #ffffff;
 	}
 
-	.content-wrapper {
-		position: fixed;
-		top: 8px;
-		right: 8px;
-		z-index: 10;
-
-		@media (max-width: 800px) {
-			right: unset;
-			left: 8px;
-		}
-	}
-
 	.background-video {
 		position: fixed;
 		top: 0;
@@ -154,17 +215,13 @@
 		width: 100vw;
 		height: 100vh;
 		object-fit: cover;
-		object-position: center top;
+		object-position: right top;
 		z-index: -1;
 		pointer-events: none;
 		opacity: 0;
 		transition: opacity 0.8s ease-in;
 
-		@media (min-width: 940px) {
-			object-position: right top;
-		}
-
-		@media (max-width: 800px) {
+		@media (max-width: 874px) {
 			object-position: center center;
 		}
 	}
@@ -234,27 +291,204 @@
 		to   { height: 36px; }
 	}
 
-	.icon-wrapper {
-		width: 80px;
-		height: 80px;
-	}
+	.desktop-social-row {
+		display: none;
+		position: fixed;
+		right: 7.2rem;
+		bottom: 2rem;
+		z-index: 10;
+		align-items: center;
+		gap: 4.6rem;
 
-	@media (max-width: 800px) {
-		.icon-wrapper {
-			width: 60px;
-			height: 60px;
+		@media (min-width: 874px) {
+			display: flex;
 		}
 	}
 
-	.coming-soon {
+	.desktop-social-icon {
+		display: flex;
+		line-height: 0;
+		color: #404040;
+		filter:
+			drop-shadow(0 0 1.5px #fff)
+			drop-shadow(0 0 1.5px #fff)
+			drop-shadow(0 0 1.5px #fff)
+			drop-shadow(0 6px 14px rgba(0, 0, 0, 0.25));
+		transition: transform 0.25s ease, filter 0.25s ease;
+	}
+
+	.desktop-social-icon:hover {
+		transform: translateY(-6px) scale(1.1);
+		filter:
+			drop-shadow(0 0 1.5px #fff)
+			drop-shadow(0 0 1.5px #fff)
+			drop-shadow(0 0 1.5px #fff)
+			drop-shadow(0 10px 20px rgba(0, 0, 0, 0.3));
+	}
+
+	.desktop-social-icon:active {
+		transform: translateY(-2px) scale(1.03);
+	}
+
+	.desktop-social-icon :global(.desktop-social-icon-glyph) {
+		width: 4rem;
+		height: 4rem;
+	}
+
+	.menu-bar {
+		--menu-bar-top: 58vh;
+		--menu-bar-height: 42px;
+
+		display: none;
+		position: fixed;
+		top: var(--menu-bar-top);
+		left: 0;
+		right: 0;
+		z-index: 20;
+		height: var(--menu-bar-height);
+		width: 100%;
+		align-items: center;
+		justify-content: center;
+		gap: 0.6rem;
+		background: rgba(255, 255, 255, 0.72);
+		backdrop-filter: blur(14px) saturate(160%);
+		-webkit-backdrop-filter: blur(14px) saturate(160%);
+		border: none;
+		border-top: 1px solid rgba(255, 255, 255, 0.6);
+		border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+		box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
+		font: inherit;
+		font-weight: 600;
+		letter-spacing: 0.15em;
+		font-size: 0.7rem;
+		color: #111;
+		cursor: pointer;
 		opacity: 0;
-		animation: fadeIn 1s ease-in forwards;
-		animation-delay: 2s;
-		font-size: 2rem;
+		pointer-events: none;
+		transition: opacity 4s ease-in, background 0.3s ease, box-shadow 0.3s ease;
 
-		@media (max-width: 800px) {
-			font-size: 1.5rem;
+		@media (max-width: 873px) {
+			display: flex;
 		}
+	}
+
+	.menu-bar:active {
+		background: rgba(255, 255, 255, 0.9);
+	}
+
+	.menu-bar.open {
+		box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+	}
+
+	.menu-bar.visible {
+		opacity: 1;
+		pointer-events: auto;
+	}
+
+	.menu-bar-glyph {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 5px;
+		width: 16px;
+	}
+
+	.menu-bar-glyph-line {
+		display: block;
+		width: 100%;
+		height: 2px;
+		border-radius: 2px;
+		background: #111;
+		transition: transform 0.3s ease, opacity 0.3s ease;
+	}
+
+	.menu-bar.open .menu-bar-glyph-line:first-child {
+		transform: translateY(3.5px) rotate(45deg);
+	}
+
+	.menu-bar.open .menu-bar-glyph-line:last-child {
+		transform: translateY(-3.5px) rotate(-45deg);
+	}
+
+	.menu-bar-label {
+		transform: translateY(1px);
+	}
+
+	.menu-panel {
+		--menu-bar-top: 58vh;
+		--menu-bar-height: 42px;
+
+		display: none;
+		position: fixed;
+		top: calc(var(--menu-bar-top) + var(--menu-bar-height));
+		left: 0;
+		right: 0;
+		bottom: 0;
+		z-index: 19;
+		background:
+			radial-gradient(120% 90% at 15% 0%, rgba(99, 102, 241, 0.28), transparent 55%),
+			radial-gradient(120% 90% at 85% 15%, rgba(232, 121, 249, 0.2), transparent 55%),
+			rgba(18, 18, 26, 0.92);
+		backdrop-filter: blur(22px) saturate(160%);
+		-webkit-backdrop-filter: blur(22px) saturate(160%);
+		box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.35);
+		clip-path: inset(0 0 100% 0);
+		transition: clip-path 0.45s cubic-bezier(0.65, 0, 0.35, 1);
+		pointer-events: none;
+
+		@media (max-width: 873px) {
+			display: block;
+		}
+	}
+
+	.menu-panel.open {
+		clip-path: inset(0 0 0 0);
+		pointer-events: auto;
+	}
+
+	.menu-panel-handle {
+		width: 36px;
+		height: 4px;
+		border-radius: 3px;
+		background: rgba(255, 255, 255, 0.2);
+		margin: 10px auto 0;
+	}
+
+	.menu-items {
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		grid-template-rows: repeat(2, 1fr);
+		gap: 16px;
+		height: calc(100% - 30px);
+		padding: 20px;
+	}
+
+	.menu-item {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		border-radius: 22px;
+		background:
+			linear-gradient(160deg, rgba(255, 255, 255, 0.32), rgba(255, 255, 255, 0) 45%),
+			var(--card-bg);
+		box-shadow:
+			inset 0 1px 1px rgba(255, 255, 255, 0.25),
+			0 10px 20px -6px rgba(0, 0, 0, 0.28);
+		text-decoration: none;
+		-webkit-tap-highlight-color: transparent;
+		transition: transform 0.15s ease, filter 0.15s ease;
+	}
+
+	.menu-item:active {
+		transform: scale(0.93);
+		filter: brightness(0.94);
+	}
+
+	.menu-item :global(.menu-item-icon) {
+		width: 2.5rem;
+		height: 2.5rem;
+		color: #ffffff;
 	}
 
 	@keyframes fadeIn {
